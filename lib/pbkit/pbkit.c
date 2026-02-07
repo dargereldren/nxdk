@@ -160,8 +160,6 @@ static  DWORD           pb_Viewport_height;
 static  DWORD           pb_Viewport_zmin;
 static  DWORD           pb_Viewport_zmax;
 
-static  float           pb_XScale;
-static  float           pb_YScale;
 static  float           pb_ZScale;
 static  float           pb_GlobalScale;
 static  float           pb_Bias;
@@ -2234,8 +2232,6 @@ int pb_init(void)
 
     DWORD           BackBufferCount;
 
-    DWORD           FrameBufferCount;
-
     DWORD           Pitch;
 
     DWORD           Addr;
@@ -2895,17 +2891,13 @@ int pb_init(void)
     // Activate pitched surface with chosen format
     pb_GPUFrameBuffersFormat = 0x100 | (pb_DepthFmt << 4) | pb_ColorFmt;
 
+    // [dargereldren] lower resolution
     pb_FrameBuffersWidth = vm.width;
     pb_FrameBuffersHeight = vm.height;
 
-    BackBufferCount = 2;            // triple buffering technic!
-                                    // allows dynamic details adjustment
+    BackBufferCount = 2;            // triple buffering technic! allows dynamic details adjustment
 
     pb_FrameBuffersCount = BackBufferCount + 1; // front buffer + back buffers
-
-    //Front and back buffers (tile #0)
-
-    FrameBufferCount=BackBufferCount+1;
 
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
@@ -2931,7 +2923,7 @@ int pb_init(void)
     pb_FBSize=Size;
 
     //multiply size by number of physical frame buffers in order to obtain global size
-    FBSize=Size*FrameBufferCount;
+    FBSize=Size*pb_FrameBuffersCount;
 
     //Huge alignment enforcement (16 Kb aligned!) for the global size
     FBSize=(FBSize+0x3FFF)&0xFFFFC000;
@@ -2947,7 +2939,7 @@ int pb_init(void)
         return -11;
     }
 
-    for(i=0;i<FrameBufferCount;i++)
+    for(i=0;i<pb_FrameBuffersCount;i++)
     {
         pb_FBAddr[i]=FBAddr;
         FBAddr+=Size;
@@ -3087,8 +3079,6 @@ int pb_init(void)
 
 
     pb_FBVFlag=0x0000; //Quincunx & Gaussian need special flags. We don't, for now.
-    pb_XScale = 1.0f;
-    pb_YScale = 1.0f;
     pb_GlobalScale = 1.0f;
     pb_Bias = 0.0f;
 

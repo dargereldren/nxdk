@@ -2230,8 +2230,6 @@ int pb_init(void)
 
     DWORD           format;
 
-    DWORD           BackBufferCount;
-
     DWORD           Pitch;
 
     DWORD           Addr;
@@ -2893,11 +2891,9 @@ int pb_init(void)
 
     // [dargereldren] lower resolution
     pb_FrameBuffersWidth = vm.width;
-    pb_FrameBuffersHeight = vm.height;
+    pb_FrameBuffersHeight = vm.height / 2;
 
-    BackBufferCount = 2;            // triple buffering technic! allows dynamic details adjustment
-
-    pb_FrameBuffersCount = BackBufferCount + 1; // front buffer + back buffers
+    pb_FrameBuffersCount = 3; // triple buffering technic! allows dynamic details adjustment, front buffer + back buffers
 
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
@@ -3083,7 +3079,7 @@ int pb_init(void)
     pb_Bias = 0.0f;
 
     p=pb_begin();
-    n=pb_FrameBuffersCount; //(BackBufferCount+1)
+    n=pb_FrameBuffersCount;
     p=pb_push3(p,NV20_TCL_PRIMITIVE_3D_MAIN_TILES_INDICES,0,1,n);
     pb_end(p);
 

@@ -11,6 +11,7 @@
 *.exe.manifest
 *.obj
 *.o
+*.d
 *.xbe
 *.inl
 *.d

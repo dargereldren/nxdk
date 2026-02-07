@@ -2233,19 +2233,8 @@ int pb_init(void)
     DWORD           format;
 
     DWORD           BackBufferCount;
-    DWORD           BackBufferFormat;
-    DWORD           DepthStencilFormat;
-
-    DWORD           Width;
-    DWORD           Height;
 
     DWORD           FrameBufferCount;
-
-    DWORD           HScale;
-    DWORD           VScale;
-
-    DWORD           HSize;
-    DWORD           VSize;
 
     DWORD           Pitch;
 
@@ -2906,21 +2895,13 @@ int pb_init(void)
     // Activate pitched surface with chosen format
     pb_GPUFrameBuffersFormat = 0x100 | (pb_DepthFmt << 4) | pb_ColorFmt;
 
-    Width=vm.width;
-    Height=vm.height;
+    pb_FrameBuffersWidth = vm.width;
+    pb_FrameBuffersHeight = vm.height;
 
-    BackBufferCount=2;          //triple buffering technic!
-                        //allows dynamic details adjustment
+    BackBufferCount = 2;            // triple buffering technic!
+                                    // allows dynamic details adjustment
 
-    pb_FrameBuffersCount=BackBufferCount+1; //front buffer + back buffers
-    pb_FrameBuffersWidth=Width;
-    pb_FrameBuffersHeight=Height;
-
-    HScale=1;
-    VScale=1;
-
-    HSize=HScale*Width; //Total width
-    VSize=VScale*Height;    //Total height
+    pb_FrameBuffersCount = BackBufferCount + 1; // front buffer + back buffers
 
     //Front and back buffers (tile #0)
 
@@ -2929,7 +2910,7 @@ int pb_init(void)
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
-    Pitch=(((ColorBpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
+    Pitch=(((ColorBpp*pb_FrameBuffersWidth)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
     pb_FrameBuffersPitch=Pitch;
 
     //look for a standard listed pitch value greater or equal to theoretical one
@@ -2942,7 +2923,7 @@ int pb_init(void)
         }
     }
 
-    Size=Pitch*VSize;
+    Size=Pitch*pb_FrameBuffersHeight;
 
     //verify 64 bytes alignment for size of a frame buffer
     if (Size&(64-1)) debugPrint("pb_init: FBSize is not well aligned.\n");
@@ -3001,7 +2982,7 @@ int pb_init(void)
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
-    Pitch=(((DepthBpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
+    Pitch=(((DepthBpp*pb_FrameBuffersWidth)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
     pb_DepthStencilPitch=Pitch;
 
     //look for a standard listed pitch value greater or equal to theoretical one
@@ -3014,7 +2995,7 @@ int pb_init(void)
         }
     }
 
-    Size=Pitch*VSize;
+    Size=Pitch*pb_FrameBuffersHeight;
 
     //verify 64 bytes alignment for size of a frame buffer
     if (Size&(64-1)) debugPrint("pb_init: DSSize is not well aligned.\n");
@@ -3055,7 +3036,7 @@ int pb_init(void)
         //pitch is the gap between start of a pixel line and start of next pixel line
         //(not necessarily the size of a pixel line, because of hardware optimization)
 
-        Pitch=(((ColorBpp*HSize)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
+        Pitch=(((ColorBpp*pb_FrameBuffersWidth)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
 
         //look for a standard listed pitch value greater or equal to theoretical one
         for(i=0;i<16;i++)
@@ -3067,7 +3048,7 @@ int pb_init(void)
             }
         }
 
-        Size=Pitch*VSize;
+        Size=Pitch*pb_FrameBuffersHeight;
 
         //verify 64 bytes alignment for size of a frame buffer
         if (Size&(64-1)) debugPrint("pb_init: EXSize is not well aligned.\n");
@@ -3106,29 +3087,10 @@ int pb_init(void)
 
 
     pb_FBVFlag=0x0000; //Quincunx & Gaussian need special flags. We don't, for now.
-    pb_XScale=(float)HScale;
-    pb_YScale=(float)VScale;
-    if (pb_YScale<pb_XScale) pb_GlobalScale=pb_YScale; else pb_GlobalScale=pb_XScale;
-
-    i=(DWORD)(2.0f*(pb_GlobalScale)+0.5f);
-    switch(i)
-    {
-        case 0:
-            pb_Bias=-8.0f;
-            break;
-        case 1:
-            pb_Bias=0.53125f;
-            break;
-        case 2: //0.0f
-        case 3: //0.585f
-        case 4: //1.0f
-        case 5: //1.322f
-        case 6: //1.585f
-        case 7: //1.907f
-        case 8: //2.0f
-            pb_Bias=pb_BiasTable[i-2];
-            break;
-    }
+    pb_XScale = 1.0f;
+    pb_YScale = 1.0f;
+    pb_GlobalScale = 1.0f;
+    pb_Bias = 0.0f;
 
     p=pb_begin();
     n=pb_FrameBuffersCount; //(BackBufferCount+1)
@@ -3136,7 +3098,7 @@ int pb_init(void)
     pb_end(p);
 
     //set area where GPU is allowed to draw pixels
-    pb_set_viewport(0,0,vm.width*HScale,vm.height*VScale,0.0f,1.0f);
+    pb_set_viewport(0,0,pb_FrameBuffersWidth,pb_FrameBuffersHeight,0.0f,1.0f);
 
     //set vertex shader type
     p=pb_begin();
@@ -3148,8 +3110,8 @@ int pb_init(void)
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_VIEWPORT_CLIP_MODE,0);   //accept pixels inside scissor rectangles union (1=reject)
     for(i=0;i<8;i++)
     {
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_VIEWPORT_CLIP_HORIZ(i),0|((vm.width*HScale-1)<<16));
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_VIEWPORT_CLIP_VERT(i),0|((vm.height*VScale-1)<<16));
+        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_VIEWPORT_CLIP_HORIZ(i),0|((pb_FrameBuffersWidth-1)<<16));
+        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_VIEWPORT_CLIP_VERT(i),0|((pb_FrameBuffersHeight-1)<<16));
     }
     pb_end(p);
 

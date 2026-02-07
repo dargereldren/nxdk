@@ -3109,7 +3109,7 @@ int pb_init(void)
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_BLEND_FUNC_SRC,1); //SrcBlend=(1,1,1,1)
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_BLEND_FUNC_DST,0); //DstBlend=(0,0,0,0)
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_DEPTH_WRITE_ENABLE,1); //ZWriteEnable=TRUE
-    p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_DITHER_ENABLE,0); //DitherEnable=FALSE
+    p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_DITHER_ENABLE,1); //DitherEnable=TRUE [dargereldren] looks better :)
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_SHADE_MODEL,0x1D01); //ShadeMode="gouraud"
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_COLOR_MASK,0x01010101); // ColorWriteEnable=abgr
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_STENCIL_OP_ZFAIL,0x1E00); //StencilZFail="keep"

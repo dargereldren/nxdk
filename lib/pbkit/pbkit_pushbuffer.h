@@ -38,10 +38,10 @@ extern "C" {
 #define _44 15
 
 // GPU subchannels
-#define SUBCH_3D   0
-#define SUBCH_2    2
-#define SUBCH_3    3
-#define SUBCH_4    4
+#define SUBCH_3D 0
+#define SUBCH_2 2
+#define SUBCH_3 3
+#define SUBCH_4 4
 #define NEXT_SUBCH 5
 
 // push buffer size, must be >64Kb and a power of 2
@@ -50,92 +50,90 @@ extern "C" {
 // Start a block of pushbuffer commands.
 // There is a hard limit of PBKIT_PUSHBUFFER_SIZE between flushes, so avoid pushing more than PBKIT_PUSHBUFFER_SIZE /
 // 4096 DWORDs per block.
-uint32_t *pb_begin (void);
+uint32_t *pb_begin(void);
 
 // Pushes the given command to the given subchannel with nparam following DWORDs as parameters.
-void pb_push_to (DWORD subchannel, uint32_t *p, DWORD command, DWORD nparam);
+void pb_push_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD nparam);
 
 // Pushes the given command and param to the given subchannel, returning a pointer to the next pushbuffer index to
 // facilitate chaining.
-uint32_t *pb_push1_to (DWORD subchannel, uint32_t *p, DWORD command, DWORD param1);
+uint32_t *pb_push1_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD param1);
 
 // Pushes the given command and params to the given subchannel, returning a pointer to the next pushbuffer index to
 // facilitate chaining.
-uint32_t *pb_push2_to (DWORD subchannel, uint32_t *p, DWORD command, DWORD param1, DWORD param2);
+uint32_t *pb_push2_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD param1, DWORD param2);
 // Pushes the given command and params to the given subchannel, returning a pointer to the next pushbuffer index to
 // facilitate chaining.
-uint32_t *pb_push3_to (DWORD subchannel, uint32_t *p, DWORD command, DWORD param1, DWORD param2, DWORD param3);
+uint32_t *pb_push3_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD param1, DWORD param2, DWORD param3);
 // Pushes the given command and params to the given subchannel, returning a pointer to the next pushbuffer index to
 // facilitate chaining.
-uint32_t *pb_push4_to (DWORD subchannel, uint32_t *p, DWORD command, DWORD param1, DWORD param2, DWORD param3,
-                       DWORD param4);
+uint32_t *pb_push4_to(DWORD subchannel, uint32_t *p, DWORD command, DWORD param1, DWORD param2, DWORD param3, DWORD param4);
 
 // Pushes the given command and floating point params to the given subchannel, returning a pointer to the next
 // pushbuffer index to facilitate chaining.
-uint32_t *pb_push4f_to (DWORD subchannel, uint32_t *p, DWORD command, float param1, float param2, float param3,
-                        float param4);
+uint32_t *pb_push4f_to(DWORD subchannel, uint32_t *p, DWORD command, float param1, float param2, float param3, float param4);
 
 // Pushes the given command and floating point param to the subchannel assigned for 3D operations, returning a pointer
 // to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push1f (uint32_t *p, DWORD command, float param1);
+uint32_t *pb_push1f(uint32_t *p, DWORD command, float param1);
 // Pushes the given command and floating point params to the subchannel assigned for 3D operations, returning a pointer
 // to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push2f (uint32_t *p, DWORD command, float param1, float param2);
+uint32_t *pb_push2f(uint32_t *p, DWORD command, float param1, float param2);
 // Pushes the given command and floating point params to the subchannel assigned for 3D operations, returning a pointer
 // to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push3f (uint32_t *p, DWORD command, float param1, float param2, float param3);
+uint32_t *pb_push3f(uint32_t *p, DWORD command, float param1, float param2, float param3);
 // Pushes the given command and floating point params to the subchannel assigned for 3D operations, returning a pointer
 // to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push4f (uint32_t *p, DWORD command, float param1, float param2, float param3, float param4);
+uint32_t *pb_push4f(uint32_t *p, DWORD command, float param1, float param2, float param3, float param4);
 
 // Pushes the given command and 2-element vector of floating point params to the subchannel assigned for 3D operations,
 // returning a pointer to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push2fv (uint32_t *p, DWORD command, const float *vector2);
+uint32_t *pb_push2fv(uint32_t *p, DWORD command, const float *vector2);
 // Pushes the given command and 3-element vector of floating point params to the subchannel assigned for 3D operations,
 // returning a pointer to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push3fv (uint32_t *p, DWORD command, const float *vector3);
+uint32_t *pb_push3fv(uint32_t *p, DWORD command, const float *vector3);
 // Pushes the given command and 4-element vector of floating point params to the subchannel assigned for 3D operations,
 // returning a pointer to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push4fv (uint32_t *p, DWORD command, const float *vector4);
+uint32_t *pb_push4fv(uint32_t *p, DWORD command, const float *vector4);
 
 // Pushes the given command and 2-element vector of DWORD params to the subchannel assigned for 3D operations, returning
 // a pointer to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push2v (uint32_t *p, DWORD command, const DWORD *vector2);
+uint32_t *pb_push2v(uint32_t *p, DWORD command, const DWORD *vector2);
 // Pushes the given command and 3-element vector of DWORD params to the subchannel assigned for 3D operations, returning
 // a pointer to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push3v (uint32_t *p, DWORD command, const DWORD *vector3);
+uint32_t *pb_push3v(uint32_t *p, DWORD command, const DWORD *vector3);
 // Pushes the given command and 4-element vector of DWORD params to the subchannel assigned for 3D operations, returning
 // a pointer to the next pushbuffer index to facilitate chaining.
-uint32_t *pb_push4v (uint32_t *p, DWORD command, const DWORD *vector4);
+uint32_t *pb_push4v(uint32_t *p, DWORD command, const DWORD *vector4);
 
 // Pushes the given command to the subchannel assigned for 3D with nparam following DWORDs as parameters.
-void pb_push (uint32_t *p, DWORD command, DWORD nparam);
+void pb_push(uint32_t *p, DWORD command, DWORD nparam);
 // Pushes the given command and param to the subchannel assigned for 3D operations, returning a pointer to the next
 // pushbuffer index to facilitate chaining.
-uint32_t *pb_push1 (uint32_t *p, DWORD command, DWORD param1);
+uint32_t *pb_push1(uint32_t *p, DWORD command, DWORD param1);
 // Pushes the given command and params to the subchannel assigned for 3D operations, returning a pointer to the next
 // pushbuffer index to facilitate chaining.
-uint32_t *pb_push2 (uint32_t *p, DWORD command, DWORD param1, DWORD param2);
+uint32_t *pb_push2(uint32_t *p, DWORD command, DWORD param1, DWORD param2);
 // Pushes the given command and params to the subchannel assigned for 3D operations, returning a pointer to the next
 // pushbuffer index to facilitate chaining.
-uint32_t *pb_push3 (uint32_t *p, DWORD command, DWORD param1, DWORD param2, DWORD param3);
+uint32_t *pb_push3(uint32_t *p, DWORD command, DWORD param1, DWORD param2, DWORD param3);
 // Pushes the given command and params to the subchannel assigned for 3D operations, returning a pointer to the next
 // pushbuffer index to facilitate chaining.
-uint32_t *pb_push4 (uint32_t *p, DWORD command, DWORD param1, DWORD param2, DWORD param3, DWORD param4);
+uint32_t *pb_push4(uint32_t *p, DWORD command, DWORD param1, DWORD param2, DWORD param3, DWORD param4);
 
 // Pushes the given command and 4x4 floating point matrix to the subchannel assigned for 3D operations, returning a
 // pointer to the next pushbuffer index to facilitate chaining. The matrix is pushed in transposed order.
-uint32_t *pb_push_transposed_matrix (uint32_t *p, DWORD command, const float *m);
+uint32_t *pb_push_transposed_matrix(uint32_t *p, DWORD command, const float *m);
 
 // Pushes a 4 column x 3 row matrix (used to push the inverse model view matrix which intentionally omits the 4th row
 // and is not transposed).
-uint32_t *pb_push_4x3_matrix (uint32_t *p, DWORD command, const float *m);
+uint32_t *pb_push_4x3_matrix(uint32_t *p, DWORD command, const float *m);
 
 // Pushes a 4x4 matrix without transposing it.
-uint32_t *pb_push_4x4_matrix (uint32_t *p, DWORD command, const float *m);
+uint32_t *pb_push_4x4_matrix(uint32_t *p, DWORD command, const float *m);
 
 // Ends a block of pushbuffer commands that was started via pb_begin, sending queued data to the GPU.
-void pb_end (uint32_t *pEnd);
+void pb_end(uint32_t *pEnd);
 
 #if defined(__cplusplus)
 }

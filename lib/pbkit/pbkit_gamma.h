@@ -14,14 +14,13 @@
 extern "C" {
 #endif
 
-typedef struct _PB_GAMMA_RAMP
-{
-    uint8_t red[256];
-    uint8_t green[256];
-    uint8_t blue[256];
+typedef struct _PB_GAMMA_RAMP {
+	uint8_t red[256];
+	uint8_t green[256];
+	uint8_t blue[256];
 } PB_GAMMA_RAMP;
 
-void pb_set_gamma_ramp (const PB_GAMMA_RAMP *pGammaRamp);
+void pb_set_gamma_ramp(const PB_GAMMA_RAMP *pGammaRamp);
 
 #if defined(__cplusplus)
 }

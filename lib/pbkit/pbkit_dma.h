@@ -23,8 +23,8 @@ extern "C" {
 #define MAXRAM 0x03FFAFFF
 
 // DMA classes
-#define DMA_CLASS_2  0x02
-#define DMA_CLASS_3  0x03
+#define DMA_CLASS_2 0x02
+#define DMA_CLASS_3 0x03
 #define DMA_CLASS_3D 0x3D
 
 // Graphics classes
@@ -38,17 +38,16 @@ extern "C" {
 #define GR_CLASS_9F 0x9F
 
 // Enumerated DMA channel destinations
-#define DMA_CHANNEL_3D_3                   3
-#define DMA_CHANNEL_PIXEL_RENDERER         9
+#define DMA_CHANNEL_3D_3 3
+#define DMA_CHANNEL_PIXEL_RENDERER 9
 #define DMA_CHANNEL_DEPTH_STENCIL_RENDERER 10
-#define DMA_CHANNEL_BITBLT_IMAGES          11
+#define DMA_CHANNEL_BITBLT_IMAGES 11
 
-struct s_CtxDma
-{
-    DWORD ChannelID;
-    DWORD Inst; // Addr in PRAMIN area, unit=16 bytes blocks, baseaddr=VIDEO_BASE+NV_PRAMIN
-    DWORD Class;
-    DWORD isGr;
+struct s_CtxDma {
+	DWORD ChannelID;
+	DWORD Inst; // Addr in PRAMIN area, unit=16 bytes blocks, baseaddr=VIDEO_BASE+NV_PRAMIN
+	DWORD Class;
+	DWORD isGr;
 };
 
 // Points an existing DMA context object at a new address.
@@ -61,11 +60,7 @@ void pb_bind_subchannel(uint32_t subchannel, const struct s_CtxDma *context);
 void *pb_agp_access(void *fb_memory_pointer);
 
 // Creates a DMA context for the given channel, class, and address space.
-void pb_create_dma_ctx(DWORD ChannelID,
-                       DWORD Class,
-                       DWORD Base,
-                       DWORD Limit,
-                       struct s_CtxDma *pDmaObject);
+void pb_create_dma_ctx(DWORD ChannelID, DWORD Class, DWORD Base, DWORD Limit, struct s_CtxDma *pDmaObject);
 
 // Binds the given DMA context.
 void pb_bind_channel(struct s_CtxDma *pCtxDmaObject);

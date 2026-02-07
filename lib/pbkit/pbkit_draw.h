@@ -21,10 +21,9 @@ extern "C" {
 
 // Fills the rectangular region described by (x, y, x + w, y + h) with the given
 // color.
-void pb_fill (int x, int y, int w, int h, DWORD color);
+void pb_fill(int x, int y, int w, int h, DWORD color);
 
-void pb_set_depth_stencil_buffer_region (uint32_t depth_buffer_format, uint32_t depth_value, uint8_t stencil_value,
-                                         uint32_t left, uint32_t top, uint32_t width, uint32_t height);
+void pb_set_depth_stencil_buffer_region(uint32_t depth_buffer_format, uint32_t depth_value, uint8_t stencil_value, uint32_t left, uint32_t top, uint32_t width, uint32_t height);
 
 #if defined(__cplusplus)
 }

@@ -160,127 +160,120 @@ static unsigned char systemFont[] =
 // clang-format on
 
 // Discards the first row of text and shifts all remaining text up by one.
-static void pb_scrollup (void)
-{
-    for (int i = 0; i < ROWS - 1; ++i) {
-        memcpy(&pb_text_screen[i][0], &pb_text_screen[i + 1][0], COLS);
-    }
-    memset(&pb_text_screen[ROWS - 1][0], 0, COLS);
+static void pb_scrollup(void) {
+	for(int i = 0; i < ROWS - 1; ++i) {
+		memcpy(&pb_text_screen[i][0], &pb_text_screen[i + 1][0], COLS);
+	}
+	memset(&pb_text_screen[ROWS - 1][0], 0, COLS);
 }
 
-static inline void goto_next_row ()
-{
-    if (++pb_next_row >= ROWS) {
-        pb_next_row = ROWS - 1;
-        pb_scrollup();
-    }
-    pb_next_col = 0;
+static inline void goto_next_row() {
+	if(++pb_next_row >= ROWS) {
+		pb_next_row = ROWS - 1;
+		pb_scrollup();
+	}
+	pb_next_col = 0;
 }
 
-void pb_print_char (char c)
-{
-    if (c == '\n') {
-        goto_next_row();
-    } else if (c == '\r') {
-        pb_next_col = 0;
-    } else if (c == '\b') {
-        if (--pb_next_col < 0) {
-            pb_next_col = 0;
-        }
-    } else if (c >= ' ') {
-        pb_text_screen[pb_next_row][pb_next_col++] = c;
-        if (pb_next_col >= COLS) {
-            goto_next_row();
-        }
-    }
+void pb_print_char(char c) {
+	if(c == '\n') {
+		goto_next_row();
+	} else if(c == '\r') {
+		pb_next_col = 0;
+	} else if(c == '\b') {
+		if(--pb_next_col < 0) {
+			pb_next_col = 0;
+		}
+	} else if(c >= ' ') {
+		pb_text_screen[pb_next_row][pb_next_col++] = c;
+		if(pb_next_col >= COLS) {
+			goto_next_row();
+		}
+	}
 }
 
-void pb_print (const char *format, ...)
-{
-    char buffer[512];
-    int i;
+void pb_print(const char *format, ...) {
+	char buffer[512];
+	int i;
 
-    va_list argList;
-    va_start(argList, format);
-    vsprintf(buffer, format, argList);
-    va_end(argList);
+	va_list argList;
+	va_start(argList, format);
+	vsprintf(buffer, format, argList);
+	va_end(argList);
 
-    for (i = 0; i < strlen(buffer); i++) {
-        pb_print_char(buffer[i]);
-    }
+	for(i = 0; i < strlen(buffer); i++) {
+		pb_print_char(buffer[i]);
+	}
 }
 
-void pb_printat (int row, int col, const char *format, ...)
-{
-    char buffer[512];
-    int i;
+void pb_printat(int row, int col, const char *format, ...) {
+	char buffer[512];
+	int i;
 
-    if ((row >= 0) && (row < ROWS)) {
-        pb_next_row = row;
-    }
-    if ((col >= 0) && (col < COLS)) {
-        pb_next_col = col;
-    }
+	if((row >= 0) && (row < ROWS)) {
+		pb_next_row = row;
+	}
+	if((col >= 0) && (col < COLS)) {
+		pb_next_col = col;
+	}
 
-    va_list argList;
-    va_start(argList, format);
-    vsprintf(buffer, format, argList);
-    va_end(argList);
+	va_list argList;
+	va_start(argList, format);
+	vsprintf(buffer, format, argList);
+	va_end(argList);
 
-    for (i = 0; i < strlen(buffer); i++) {
-        pb_print_char(buffer[i]);
-    }
+	for(i = 0; i < strlen(buffer); i++) {
+		pb_print_char(buffer[i]);
+	}
 }
 
-void pb_erase_text_screen (void)
-{
-    pb_next_row = 0;
-    pb_next_col = 0;
-    memset(pb_text_screen, 0, sizeof(pb_text_screen));
+void pb_erase_text_screen(void) {
+	pb_next_row = 0;
+	pb_next_col = 0;
+	memset(pb_text_screen, 0, sizeof(pb_text_screen));
 }
 
-void pb_draw_text_screen (void)
-{
-    int i, j, k, l, m, x1, x2, y;
-    unsigned char c;
+void pb_draw_text_screen(void) {
+	int i, j, k, l, m, x1, x2, y;
+	unsigned char c;
 
-    for (i = 0; i < ROWS; i++) {
-        for (j = 0; j < COLS; j++) {
-            c = pb_text_screen[i][j];
-            if ((c == ' ') || (c == '\t')) {
-                pb_text_screen[i][j] = 0;
-            }
-        }
-    }
+	for(i = 0; i < ROWS; i++) {
+		for(j = 0; j < COLS; j++) {
+			c = pb_text_screen[i][j];
+			if((c == ' ') || (c == '\t')) {
+				pb_text_screen[i][j] = 0;
+			}
+		}
+	}
 
-    // convert pb_text_screen characters into push buffer commands
-    // TODO: replace rectangle fill with texture copy when available!
-    for (i = 0; i < ROWS; i++) {
-        for (j = 0; j < COLS; j++) {
-            c = pb_text_screen[i][j];
-            if (c) {
-                for (l = 0, x1 = -1, x2 = -1; l < 8; l++, x1 = -1, x2 = -1) {
-                    for (k = 0, m = 0x80; k < 8; k++, m >>= 1) {
-                        if (systemFont[c * 8 + l] & m) {
-                            if (x1 >= 0) {
-                                x2 = 20 + j * 10 + k;
-                            } else {
-                                x1 = 20 + j * 10 + k;
-                            }
-                        } else {
-                            if (x2 >= 0) {
-                                y = 25 + i * 25 + l * 2;
-                                pb_fill(x1, y, x2 - x1 + 1, 2, 0xFFFFFF);
-                                x1 = x2 = -1;
-                            } else if (x1 >= 0) {
-                                y = 25 + i * 25 + l * 2;
-                                pb_fill(x1, y, 1, 2, 0xFFFFFF);
-                                x1 = -1;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+	// convert pb_text_screen characters into push buffer commands
+	// TODO: replace rectangle fill with texture copy when available!
+	for(i = 0; i < ROWS; i++) {
+		for(j = 0; j < COLS; j++) {
+			c = pb_text_screen[i][j];
+			if(c) {
+				for(l = 0, x1 = -1, x2 = -1; l < 8; l++, x1 = -1, x2 = -1) {
+					for(k = 0, m = 0x80; k < 8; k++, m >>= 1) {
+						if(systemFont[c * 8 + l] & m) {
+							if(x1 >= 0) {
+								x2 = 20 + j * 10 + k;
+							} else {
+								x1 = 20 + j * 10 + k;
+							}
+						} else {
+							if(x2 >= 0) {
+								y = 25 + i * 25 + l * 2;
+								pb_fill(x1, y, x2 - x1 + 1, 2, 0xFFFFFF);
+								x1 = x2 = -1;
+							} else if(x1 >= 0) {
+								y = 25 + i * 25 + l * 2;
+								pb_fill(x1, y, 1, 2, 0xFFFFFF);
+								x1 = -1;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }

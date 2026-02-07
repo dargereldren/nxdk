@@ -21,38 +21,35 @@
 
 #define PB_SETOUTER 0xB2A
 
-void pb_set_dma_address (const struct s_CtxDma *context, const void *address, uint32_t limit)
-{
-    uint32_t dma_addr = ((uint32_t)address) & 0x03FFFFFF;
-    uint32_t dma_flags = DMA_CLASS_3D | 0x0000B000;
-    dma_addr |= 3;
+void pb_set_dma_address(const struct s_CtxDma *context, const void *address, uint32_t limit) {
+	uint32_t dma_addr = ((uint32_t)address) & 0x03FFFFFF;
+	uint32_t dma_flags = DMA_CLASS_3D | 0x0000B000;
+	dma_addr |= 3;
 
-    uint32_t *p = pb_begin();
-    p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_WAIT_MAKESPACE, 0);
+	uint32_t *p = pb_begin();
+	p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_WAIT_MAKESPACE, 0);
 
-    // set params addr,data
-    p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (context->Inst << 4) + 0x08, dma_addr);
+	// set params addr,data
+	p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (context->Inst << 4) + 0x08, dma_addr);
 
-    // calls subprogID PB_SETOUTER: does VIDEOREG(addr)=data
-    p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
-    p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (context->Inst << 4) + 0x0C, dma_addr);
-    p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
-    p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (context->Inst << 4) + 0x00, dma_flags);
-    p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
-    p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (context->Inst << 4) + 0x04, limit);
-    p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
+	// calls subprogID PB_SETOUTER: does VIDEOREG(addr)=data
+	p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
+	p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (context->Inst << 4) + 0x0C, dma_addr);
+	p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
+	p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (context->Inst << 4) + 0x00, dma_flags);
+	p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
+	p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (context->Inst << 4) + 0x04, limit);
+	p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
 
-    pb_end(p);
+	pb_end(p);
 }
 
-void pb_bind_subchannel (uint32_t subchannel, const struct s_CtxDma *context)
-{
-    uint32_t *p = pb_begin();
-    p = pb_push1_to(subchannel, p, NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT, context->ChannelID);
-    pb_end(p);
+void pb_bind_subchannel(uint32_t subchannel, const struct s_CtxDma *context) {
+	uint32_t *p = pb_begin();
+	p = pb_push1_to(subchannel, p, NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT, context->ChannelID);
+	pb_end(p);
 }
 
-void *pb_agp_access (void *fb_memory_pointer)
-{
-    return (void *)(((uint32_t)fb_memory_pointer) | AGP_MEMORY_REMAP);
+void *pb_agp_access(void *fb_memory_pointer) {
+	return (void *)(((uint32_t)fb_memory_pointer) | AGP_MEMORY_REMAP);
 }

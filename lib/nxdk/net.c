@@ -122,7 +122,8 @@ int nxNetInit(const nx_net_parameters_t *parameters)
         int i = 0;
         while (dhcp_supplied_address(&nforce_netif) == 0) {
             i++;
-            if (i == 10) {
+            // [dargereldren]
+            if (i == 99999) {
                 return -2;
             }
             KeDelayExecutionThread(KernelMode, FALSE, &duration);

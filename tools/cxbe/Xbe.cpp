@@ -65,7 +65,8 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail, const std::vec
         {
             memset(&m_Header.dwInitFlags, 0, sizeof(m_Header.dwInitFlags));
 
-            m_Header.dwInitFlags.bLimit64MB = true;
+            // [dargereldren]
+            // m_Header.dwInitFlags.bLimit64MB = true;
             m_Header.dwInitFlags.bDontSetupHarddisk = false;
             m_Header.dwInitFlags.bMountUtilityDrive = true;
         }

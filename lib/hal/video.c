@@ -362,7 +362,7 @@ void XVideoInit(DWORD dwMode, int width, int height, int bpp)
 	}
 	framebufferMemory = MmAllocateContiguousMemoryEx(screenSize,
 	                                                 0x00000000, 0x7FFFFFFF,
-	                                                 0x1000,
+	                                                 0x4000,
 	                                                 PAGE_READWRITE |
 	                                                 PAGE_WRITECOMBINE);
 	assert(framebufferMemory != NULL);

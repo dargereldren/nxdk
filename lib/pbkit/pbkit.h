@@ -28,6 +28,7 @@ extern "C"
 #ifndef PBK_FRAMEBUFFERCOUNT
 #define PBK_FRAMEBUFFERCOUNT 2
 #endif
+#define PBK_USE_XV_FB
 
 #include "outer.h"
 #include "nv_objects.h"

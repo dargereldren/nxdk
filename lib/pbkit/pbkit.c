@@ -2247,6 +2247,8 @@ int pb_init(void)
 
     DWORD           value;
 
+    bool            color_tileable;
+
     if (pb_running) return -8;
 
     //reset global vars (except pb_Size)
@@ -2893,10 +2895,10 @@ int pb_init(void)
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
-    Pitch=(((ColorBpp*pb_FrameBuffersWidth)>>3)+0x3F)&0xFFFFFFC0; //64 units aligned
-    pb_FrameBuffersPitch=Pitch;
+    Pitch=(((ColorBpp*pb_FrameBuffersWidth)>>3)+0x3F)&0xFFFFFFC0; //64-byte aligned stride as used by XVideo
 
-    //look for a standard listed pitch value greater or equal to theoretical one
+#ifndef PBK_USE_XV_FB
+    //look for a standard listed pitch value greater or equal to theoretical one (keeps tiling happy)
     for(i=0;i<16;i++)
     {
         if (pb_TilePitches[i]>=Pitch)
@@ -2905,7 +2907,9 @@ int pb_init(void)
             break;
         }
     }
+#endif
 
+    pb_FrameBuffersPitch=Pitch;
     Size=Pitch*pb_FrameBuffersHeight;
 
     //verify 64 bytes alignment for size of a frame buffer
@@ -2914,11 +2918,14 @@ int pb_init(void)
     pb_FBSize=Size;
 
     //multiply size by number of physical frame buffers in order to obtain global size
+#ifdef PBK_USE_XV_FB
+    FBSize=Size*(PBK_FRAMEBUFFERCOUNT-1);
+#else
     FBSize=Size*PBK_FRAMEBUFFERCOUNT;
+#endif
 
     //Huge alignment enforcement (16 Kb aligned!) for the global size
     FBSize=(FBSize+0x3FFF)&0xFFFFC000;
-
     FBAddr = (DWORD)MmAllocateContiguousMemoryEx(FBSize, 0, 0x03FFB000, 0x4000, PAGE_READWRITE | PAGE_WRITECOMBINE);
 
     pb_FBGlobalSize=FBSize;
@@ -2932,6 +2939,9 @@ int pb_init(void)
 
     for(i=0;i<PBK_FRAMEBUFFERCOUNT;i++)
     {
+#ifdef PBK_USE_XV_FB
+        if(i == 0) { pb_FBAddr[i] = (DWORD)XVideoGetFB(); continue; }
+#endif
         pb_FBAddr[i]=FBAddr;
         FBAddr+=Size;
     }
@@ -2950,14 +2960,26 @@ int pb_init(void)
     //fully recover original values. Compression is aborted if the 16 dwords have
     //very different values (will occur at the edges of projected triangles).
 
-    pb_assign_tile( 0,              //int   tile_index,
-            pb_FrameBuffersAddr&0x03FFFFFF, //DWORD tile_addr,
-            FBSize,             //DWORD tile_size,
-            Pitch,              //DWORD tile_pitch,
-            0,              //DWORD tile_z_start_tag,
-            0,              //DWORD tile_z_offset,
-            0               //DWORD tile_flags
-            );
+    // Only enable color tiling when both address and size satisfy the HW 16KB alignment rule
+    // and the front buffer (XVideo) is aligned when in reuse mode. Otherwise leave tile 0 disabled
+    // to avoid touching memory outside the real framebuffer.
+    color_tileable = ((pb_FrameBuffersAddr & 0x3FFF) == 0) && ((FBSize & 0x3FFF) == 0);
+#ifdef PBK_USE_XV_FB
+    color_tileable = color_tileable && (((DWORD)pb_FBAddr[0] & 0x3FFF) == 0);
+#endif
+
+    if (color_tileable) {
+        pb_assign_tile( 0,              //int   tile_index,
+                pb_FrameBuffersAddr&0x03FFFFFF, //DWORD tile_addr,
+                FBSize,             //DWORD tile_size,
+                Pitch,              //DWORD tile_pitch,
+                0,              //DWORD tile_z_start_tag,
+                0,              //DWORD tile_z_offset,
+                0               //DWORD tile_flags
+                );
+    } else {
+        pb_release_tile(0, 0);
+    }
 
 
     //Depth stencil buffer (tile #1)

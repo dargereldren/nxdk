@@ -120,8 +120,8 @@ static  DWORD           pb_FreeInst;        //next free space in PRAMIN area (ad
 
 static  int         pb_BackBufferNxt=0;
 static  int         pb_BackBufferNxtVBL=0;
-static  int         pb_BackBufferbReady[3]={0,0,0};
-static  int         pb_BackBufferIndex[3];
+static  int         pb_BackBufferbReady[PBK_FRAMEBUFFERCOUNT]={0};
+static  int         pb_BackBufferIndex[PBK_FRAMEBUFFERCOUNT];
 
 static  DWORD           pb_FifoChannelsReady=0;
 static  DWORD           pb_FifoChannelsMode=NV_PFIFO_MODE_ALL_PIO;
@@ -130,12 +130,11 @@ static  DWORD           pb_FifoChannelID=0;
 static  DWORD           pb_PutRunSize=0;
 static  DWORD           pb_GetRunSize;
 
-static  DWORD           pb_FrameBuffersCount;
 static  DWORD           pb_FrameBuffersWidth;
 static  DWORD           pb_FrameBuffersHeight;
 static  DWORD           pb_FrameBuffersAddr;
 static  DWORD           pb_FrameBuffersPitch;
-static  DWORD           pb_FBAddr[3];       //frame buffers addresses
+static  DWORD           pb_FBAddr[PBK_FRAMEBUFFERCOUNT];       //frame buffers addresses
 static  DWORD           pb_FBSize;      //size of 1 buffer
 static  DWORD           pb_FBGlobalSize;    //size of all buffers
 static  DWORD           pb_FBVFlag;
@@ -237,7 +236,7 @@ static void pb_vbl_handler(void)
         VIDEOREG(NV_PGRAPH_INCREMENT)|=NV_PGRAPH_INCREMENT_READ_3D_TRIGGER;
 
         //rotate next back buffer
-        next=(next+1)%3;
+        next=(next+1)%PBK_FRAMEBUFFERCOUNT;
         pb_BackBufferNxtVBL=next;
     }
 
@@ -302,7 +301,7 @@ static void pb_subprog(DWORD subprogID, DWORD paramA, DWORD paramB)
             next=pb_BackBufferNxt;
             pb_BackBufferIndex[next]=paramA;
             pb_BackBufferbReady[next]=1;
-            next=(next+1)%3;
+            next=(next+1)%PBK_FRAMEBUFFERCOUNT;
             pb_BackBufferNxt=next;
             break;
 
@@ -2023,7 +2022,7 @@ int pb_finished(void)
 
     //insert in push buffer the commands to trigger selection of next back buffer
     //(because previous ones may not have finished yet, so need to use 0x0100 call)
-    pb_back_index=(pb_back_index+1)%3;
+    pb_back_index=(pb_back_index+1)%PBK_FRAMEBUFFERCOUNT;
     pb_target_back_buffer();
 
     return 0;
@@ -2268,7 +2267,7 @@ int pb_init(void)
     pb_set_gamma_ramp(&gammaRamp);
 
     pb_BackBufferNxt=0;
-    for(i=0;i<5;i++) pb_BackBufferbReady[i]=0;
+    for(i=0;i<PBK_FRAMEBUFFERCOUNT;i++) pb_BackBufferbReady[i]=0;
 
     pb_Put=NULL;
 
@@ -2295,9 +2294,7 @@ int pb_init(void)
     pb_Put=pb_Head;
 
     pb_BackBufferNxt=0;     //increments when we finish drawing a frame
-    pb_BackBufferbReady[0]=0;
-    pb_BackBufferbReady[1]=0;
-    pb_BackBufferbReady[2]=0;
+    for(i=0;i<PBK_FRAMEBUFFERCOUNT;i++) pb_BackBufferbReady[i]=0;
 
     pb_BackBufferNxtVBL=0;      //increments when VBlank event fires
 
@@ -2893,8 +2890,6 @@ int pb_init(void)
     pb_FrameBuffersWidth = vm.width;
     pb_FrameBuffersHeight = vm.height / 2;
 
-    pb_FrameBuffersCount = 3; // triple buffering technic! allows dynamic details adjustment, front buffer + back buffers
-
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
@@ -2919,7 +2914,7 @@ int pb_init(void)
     pb_FBSize=Size;
 
     //multiply size by number of physical frame buffers in order to obtain global size
-    FBSize=Size*pb_FrameBuffersCount;
+    FBSize=Size*PBK_FRAMEBUFFERCOUNT;
 
     //Huge alignment enforcement (16 Kb aligned!) for the global size
     FBSize=(FBSize+0x3FFF)&0xFFFFC000;
@@ -2935,7 +2930,7 @@ int pb_init(void)
         return -11;
     }
 
-    for(i=0;i<pb_FrameBuffersCount;i++)
+    for(i=0;i<PBK_FRAMEBUFFERCOUNT;i++)
     {
         pb_FBAddr[i]=FBAddr;
         FBAddr+=Size;
@@ -3079,7 +3074,7 @@ int pb_init(void)
     pb_Bias = 0.0f;
 
     p=pb_begin();
-    n=pb_FrameBuffersCount;
+    n=PBK_FRAMEBUFFERCOUNT;
     p=pb_push3(p,NV20_TCL_PRIMITIVE_3D_MAIN_TILES_INDICES,0,1,n);
     pb_end(p);
 

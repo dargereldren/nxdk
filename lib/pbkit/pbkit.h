@@ -25,6 +25,10 @@ extern "C"
 #include <stdbool.h>
 #endif
 
+#ifndef PBK_FRAMEBUFFERCOUNT
+#define PBK_FRAMEBUFFERCOUNT 3
+#endif
+
 #include "outer.h"
 #include "nv_objects.h"
 #include "nv_regs.h"

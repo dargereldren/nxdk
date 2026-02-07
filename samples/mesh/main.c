@@ -73,8 +73,10 @@ int main(void)
     int       fps, frames, frames_total;
     float     m_viewport[4][4];
 
-    XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+    // [dargereldren]
+    XVideoSetMode(640, 480, 16, REFRESH_DEFAULT);
 
+    pb_set_color_format(NV097_SET_SURFACE_FORMAT_COLOR_LE_R5G6B5, false);
     if ((status = pb_init())) {
         debugPrint("pb_init Error %d\n", status);
         Sleep(2000);

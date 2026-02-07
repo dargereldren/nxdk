@@ -2888,7 +2888,7 @@ int pb_init(void)
 
     // [dargereldren] lower resolution
     pb_FrameBuffersWidth = vm.width;
-    pb_FrameBuffersHeight = vm.height / 2;
+    pb_FrameBuffersHeight = vm.height;
 
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)

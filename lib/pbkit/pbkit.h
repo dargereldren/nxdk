@@ -26,7 +26,7 @@ extern "C"
 #endif
 
 #ifndef PBK_FRAMEBUFFERCOUNT
-#define PBK_FRAMEBUFFERCOUNT 3
+#define PBK_FRAMEBUFFERCOUNT 2
 #endif
 
 #include "outer.h"

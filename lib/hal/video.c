@@ -360,11 +360,7 @@ void XVideoInit(DWORD dwMode, int width, int height, int bpp)
 	if (framebufferMemory != NULL) {
 		MmFreeContiguousMemory(framebufferMemory);
 	}
-	framebufferMemory = MmAllocateContiguousMemoryEx(screenSize,
-	                                                 0x00000000, 0x03FFB000,
-	                                                 0x4000,
-	                                                 PAGE_READWRITE |
-	                                                 PAGE_WRITECOMBINE);
+	framebufferMemory = MmAllocateContiguousMemoryEx(screenSize, 0, 0x03FFB000, 0x4000, PAGE_READWRITE | PAGE_WRITECOMBINE);
 	assert(framebufferMemory != NULL);
 	memset(framebufferMemory, 0x00, screenSize);
 	asm __volatile__("sfence");

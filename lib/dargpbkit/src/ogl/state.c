@@ -412,7 +412,7 @@ GLboolean pbgl_state_flush(void) {
 				if(pbgl.flags.lighting) {
 					mat4f invmv;
 					mat4_invert(&invmv, &pbgl.mtx[MTX_MODELVIEW].mtx);
-					p = push_command_matrix4x4(p, NV097_SET_INVERSE_MODEL_VIEW_MATRIX, invmv.v);
+					p = push_command_matrix4x4_transposed(p, NV097_SET_INVERSE_MODEL_VIEW_MATRIX, invmv.v);
 				}
 				p = push_command_matrix4x4_transposed(p, NV097_SET_MODEL_VIEW_MATRIX, pbgl.mtx[MTX_MODELVIEW].mtx.v);
 			}

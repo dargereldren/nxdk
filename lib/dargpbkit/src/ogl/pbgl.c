@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include <pbkit/pbkit.h>
+#include <pbkit.h>
 
 #include "GL/gl.h"
 #include "GL/glext.h"

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <windows.h>
-#include <pbkit/pbkit.h>
+#include <pbkit.h>
 #include <x86intrin.h>
 
 #define GL_GLEXT_PROTOTYPES

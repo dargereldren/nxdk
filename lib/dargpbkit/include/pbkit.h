@@ -30,15 +30,15 @@ extern "C"
 #endif
 #define PBK_USE_XV_FB
 
-#include "src/outer.h"
-#include "src/nv_objects.h"
-#include "src/nv_regs.h"
-#include "src/pbkit_gamma.h"
-#include "src/pbkit_dma.h"
-#include "src/pbkit_draw.h"
-#include "src/pbkit_framebuffer.h"
-#include "src/pbkit_print.h"
-#include "src/pbkit_pushbuffer.h"
+#include "../src/outer.h"
+#include "../src/nv_objects.h"
+#include "../src/nv_regs.h"
+#include "../src/pbkit_gamma.h"
+#include "../src/pbkit_dma.h"
+#include "../src/pbkit_draw.h"
+#include "../src/pbkit_framebuffer.h"
+#include "../src/pbkit_print.h"
+#include "../src/pbkit_pushbuffer.h"
 
 void    pb_show_front_screen(void); //shows scene (allows VBL synced screen swapping)
 void    pb_show_debug_screen(void); //shows debug screen (default openxdk+SDL buffer)

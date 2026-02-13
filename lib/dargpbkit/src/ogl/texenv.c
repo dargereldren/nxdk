@@ -1,4 +1,4 @@
-#include <pbkit/pbkit.h>
+#include <pbkit.h>
 #include <limits.h>
 
 #include "GL/gl.h"

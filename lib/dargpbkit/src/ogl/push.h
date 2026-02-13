@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include <assert.h>
-#include <pbkit/pbkit.h>
+#include <pbkit.h>
 
 #define NV097_SET_TWO_SIDE_LIGHT_EN 0x17C4
 #define NV097_SET_BACK_SCENE_AMBIENT_COLOR 0x17A0

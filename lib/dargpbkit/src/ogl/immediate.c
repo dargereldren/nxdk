@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <limits.h>
-#include <pbkit/pbkit.h>
+#include <pbkit.h>
 
 #include "GL/gl.h"
 #include "GL/glext.h"

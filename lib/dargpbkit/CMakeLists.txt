@@ -5,35 +5,54 @@ set(PBGL_VERSION 0.1)
 set(PBGL_GL_VERSION 1.2)
 
 add_library(dargpbkit
-  src/ogl/array.c
-  src/ogl/error.c
-  src/ogl/fog.c
-  src/ogl/immediate.c
-  src/ogl/info.c
-  src/ogl/light.c
-  src/ogl/matrix.c
-  src/ogl/memory.c
-  src/ogl/misc.c
-  src/ogl/pbgl.c
-  src/ogl/state.c
-  src/ogl/swizzle.c
-  src/ogl/texenv.c
-  src/ogl/texgen.c
-  src/ogl/texture.c
-  src/ogl/types.c
-  src/pbkit.c
-  src/pbkit_dma.c
-  src/pbkit_draw.c
-  src/pbkit_gamma.c
-  src/pbkit_print.c
-  src/pbkit_pushbuffer.c
+	src/ogl/array.c
+	src/ogl/error.c
+	src/ogl/fog.c
+	src/ogl/immediate.c
+	src/ogl/info.c
+	src/ogl/light.c
+	src/ogl/matrix.c
+	src/ogl/memory.c
+	src/ogl/misc.c
+	src/ogl/pbgl.c
+	src/ogl/state.c
+	src/ogl/swizzle.c
+	src/ogl/texenv.c
+	src/ogl/texgen.c
+	src/ogl/texture.c
+	src/ogl/types.c
+	src/pbkit.c
+	src/pbkit_dma.c
+	src/pbkit_draw.c
+	src/pbkit_gamma.c
+	src/pbkit_print.c
+	src/pbkit_pushbuffer.c
 )
 
 add_definitions(
-  -DXBOX
-  -DPBGL_DEBUG
-  -DPBGL_VERSION=0.1
-  -DPBGL_GL_VERSION=1.2
+	-DXBOX
+	-DPBGL_DEBUG
+	-DPBGL_VERSION=0.1
+	-DPBGL_GL_VERSION=1.2
+)
+
+# cause it can get pretty bloated
+target_compile_options(dargpbkit PUBLIC
+	-Oz
+	-march=pentium3
+	-mtune=pentium3
+	-ffunction-sections
+	-fdata-sections
+	-fomit-frame-pointer
+	-fno-ident
+	-fno-common
+	-fno-stack-protector
+	-fno-asynchronous-unwind-tables
+	-fno-unwind-tables
+)
+
+target_link_options(dargpbkit PUBLIC
+	-Wl,--gc-sections
 )
 
 target_include_directories(dargpbkit PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)

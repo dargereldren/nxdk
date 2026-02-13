@@ -360,7 +360,7 @@ GLboolean pbgl_state_flush(void) {
 	if(pbgl.lightmodel.dirty) {
 		p = push_command_parameter(p, NV097_SET_LIGHT_CONTROL, PBGL_MASK(NV097_SET_LIGHT_CONTROL_SEPARATE_SPECULAR_EN, GL_FALSE) | // TODO: this is probably a GL setting
 																   PBGL_MASK(NV097_SET_LIGHT_CONTROL_LOCALEYE, pbgl.lightmodel.local) | PBGL_MASK(NV097_SET_LIGHT_CONTROL_SOUT, NV097_SET_LIGHT_CONTROL_SOUT_ZERO_OUT));
-		p = push_command_boolean(p, NV097_SET_TWO_SIDE_LIGHT_EN, pbgl.lightmodel.twosided);
+		p = push_command_boolean(p, NV097_SET_TWO_SIDE_LIGHT_EN, 1); //pbgl.lightmodel.twosided);
 		// set both front and back colors just in case
 		p = push_command(p, NV097_SET_SCENE_AMBIENT_COLOR, 3);
 		p = push_floats(p, pbgl.lightmodel.ambient.v, 3);
@@ -377,16 +377,6 @@ GLboolean pbgl_state_flush(void) {
 	}
 
 	pb_end(p);
-
-	if(pbgl.light_any_dirty) {
-		p = pb_begin();
-		p = push_command_boolean(p, NV097_SET_LIGHTING_ENABLE, pbgl.flags.lighting);
-		pb_end(p);
-		if(pbgl.flags.lighting) {
-			pbgl_light_flush_all();
-		}
-		pbgl.light_any_dirty = GL_FALSE;
-	}
 
 	if(pbgl.tex_any_dirty) {
 		p = pb_begin();
@@ -430,6 +420,16 @@ GLboolean pbgl_state_flush(void) {
 		}
 		pb_end(p);
 		pbgl.mtx_any_dirty = GL_FALSE;
+	}
+
+	if(pbgl.light_any_dirty) {
+		p = pb_begin();
+		p = push_command_boolean(p, NV097_SET_LIGHTING_ENABLE, pbgl.flags.lighting);
+		pb_end(p);
+		if(pbgl.flags.lighting) {
+			pbgl_light_flush_all();
+		}
+		pbgl.light_any_dirty = GL_FALSE;
 	}
 
 	if(pbgl.texenv_dirty) {

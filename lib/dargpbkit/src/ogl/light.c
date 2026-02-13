@@ -16,15 +16,19 @@ void pbgl_light_flush_all(void) {
 	// TODO: spot lights
 	GLuint lightmask = 0;
 	GLuint *p = NULL;
-
-	for(GLuint i = 0, lofs = 0, blofs = 0; i < LIGHT_COUNT; i++, lofs += 128, blofs += 64) {
+	GLuint lofs = 0;
+	GLuint blofs = 0;
+	for(GLuint i = 0; i < LIGHT_COUNT; i++) {
 		if(pbgl.light[i].enabled) {
+			lightmask <<= 2;
+
 			// by GL spec if position.w == 0, then the light is directional and position is direction
 			if(pbgl.light[i].pos.w == 0.f) {
-				lightmask |= NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_INFINITE << (i * 2);
+				lightmask |= NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_INFINITE;
 			} else {
-				lightmask |= NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_LOCAL << (i * 2);
+				lightmask |= NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_LOCAL;
 			}
+
 			// lights are too thicc, can't push them all in one begin-end pair
 			// FIXME: we set both back and front light colors; can GL do them separately?
 			if(pbgl.light[i].dirty) {
@@ -54,6 +58,10 @@ void pbgl_light_flush_all(void) {
 				pb_end(p);
 				pbgl.light[i].dirty = GL_FALSE;
 			}
+
+			// we do change lights here.
+			lofs += 128;
+			blofs += 64;
 		}
 	}
 

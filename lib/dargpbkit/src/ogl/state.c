@@ -220,10 +220,14 @@ static inline GLuint *flush_texunit(GLuint *p, GLuint i) {
 
 		const GLuint tidx = i * 64;
 		if(tu->tex && enable != NV_TEX_DISABLE) {
-			// note: we only operate on swizzled textures
 			const GLuint texmat = MTX_TEXTURE0 + i;
+			const GLuint control1 = tu->tex->nv.linear ? PBGL_MASK(NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH, tu->tex->mips[0].pitch) : 0;
+			const GLuint imgrect = tu->tex->nv.linear ? ((tu->tex->width << 16) | tu->tex->height) : 0;
 			p = push_command_parameter(p, NV097_SET_TEXTURE_OFFSET + tidx, tu->tex->nv.addr);
 			p = push_command_parameter(p, NV097_SET_TEXTURE_FORMAT + tidx, tu->tex->nv.format);
+			// pitch/size only matter for linear NPOT textures.
+			p = push_command_parameter(p, NV097_SET_TEXTURE_CONTROL1 + tidx, control1);
+			p = push_command_parameter(p, NV097_SET_TEXTURE_IMAGE_RECT + tidx, imgrect);
 			p = push_command_parameter(p, NV097_SET_TEXTURE_PALETTE + tidx, tu->tex->nv.palette);
 			p = push_command_parameter(p, NV097_SET_TEXTURE_ADDRESS + tidx, tu->tex->nv.wrap);
 			p = push_command_parameter(p, NV097_SET_TEXTURE_CONTROL0 + tidx, enable | PBGL_MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) | PBGL_MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 4095));
@@ -231,6 +235,8 @@ static inline GLuint *flush_texunit(GLuint *p, GLuint i) {
 			p = push_command_boolean(p, NV097_SET_TEXTURE_MATRIX_ENABLE + i * 4, !pbgl.mtx[texmat].identity);
 		} else {
 			p = push_command_parameter(p, NV097_SET_TEXTURE_CONTROL0 + tidx, NV_TEX_DISABLE);
+			p = push_command_parameter(p, NV097_SET_TEXTURE_CONTROL1 + tidx, 0);
+			p = push_command_parameter(p, NV097_SET_TEXTURE_IMAGE_RECT + tidx, 0);
 			p = push_command_parameter(p, NV097_SET_TEXTURE_PALETTE + tidx, 0);
 			p = push_command_boolean(p, NV097_SET_TEXTURE_MATRIX_ENABLE + i * 4, GL_FALSE);
 		}

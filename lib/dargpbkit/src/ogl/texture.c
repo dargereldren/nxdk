@@ -46,6 +46,10 @@ static texture_t *textures = NULL;
 static GLuint tex_count = 0;
 static GLuint tex_cap = 0;
 
+static inline GLboolean is_pow2(const GLuint v) {
+	return v && !(v & (v - 1));
+}
+
 static inline GLuint wrap_gl_to_nv(const GLenum glwrap) {
 	switch(glwrap) {
 	case GL_CLAMP: return NV_PGRAPH_TEXADDRESS0_ADDRU_CLAMP_OGL;
@@ -222,13 +226,17 @@ static inline GLuint extfmt_bytespp(const GLenum glformat, const GLuint type, GL
 }
 
 static inline GLboolean tex_gl_to_nv(texture_t *tex) {
-	const GLuint fmt = intfmt_gl_to_nv(tex->gl.format);
+	// NPOT textures are stored linearly (pitched), not swizzled.
+	tex->nv.linear = !(is_pow2(tex->width) && is_pow2(tex->height));
+
+	const GLuint fmt = intfmt_gl_to_nv(tex->gl.format); //, tex->nv.linear); [dargereldren] not needed (maybe in the future, no idea)
 
 	if(fmt == 0) {
 		return GL_FALSE; // unknown format
 	}
 
-	tex->nv.linear = GL_FALSE; // TODO: this is basically free GL_TEXTURE_RECTANGLE, but that isn't in GL until 3.1
+    // NPOT textures are stored linearly (pitched), not swizzled.
+	tex->nv.linear = !(is_pow2(tex->width) && is_pow2(tex->height));
 
 	const GLuint addr_u = wrap_gl_to_nv(tex->gl.wrap_s);
 	const GLuint wrap_u = 0; // TODO: what is this?
@@ -253,9 +261,9 @@ static inline GLboolean tex_gl_to_nv(texture_t *tex) {
 		PBGL_MASK(NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL, NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_QUINCUNX) |
 		PBGL_MASK(NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS, 0); // TODO
 
-	const GLuint size_u = ulog2(tex->width);
-	const GLuint size_v = ulog2(tex->height);
-	const GLuint size_p = ulog2(tex->depth);
+	const GLuint size_u = tex->nv.linear ? 0 : ulog2(tex->width);
+	const GLuint size_v = tex->nv.linear ? 0 : ulog2(tex->height);
+	const GLuint size_p = tex->nv.linear ? 0 : ulog2(tex->depth);
 
 	const palette_t *pal = tex->shared_palette ? tex->shared_palette : &tex->palette;
 	if(pal->data && pal->width) {
@@ -439,6 +447,56 @@ static void tex_store(texture_t *tex, const GLubyte *data, GLenum fmt, GLuint by
 		tex_store_palette(pal);
 	}
 
+	// NPOT (linear) textures are stored without swizzling; mipmaps not supported here.
+	if(tex->nv.linear) {
+		if(genmips) {
+			pbgl_set_error(GL_INVALID_OPERATION);
+			return;
+		}
+
+		if(tex->bytespp == bytespp && !reverse) {
+			const GLuint dst_pitch = tex->mips[level].pitch;
+			const GLuint row_bytes = w * tex->bytespp;
+			for(GLuint r = 0; r < h; ++r) {
+				pbgl_aligned_copy(out + (y + r) * dst_pitch + x * tex->bytespp, data + r * row_bytes, row_bytes);
+			}
+			return;
+		}
+
+		// allocate temporary buffer for conversion
+		GLubyte *tmp = malloc(w * h * tex->bytespp);
+		if(!tmp) {
+			pbgl_set_error(GL_OUT_OF_MEMORY);
+			return;
+		}
+
+		const GLubyte *src = data;
+		GLubyte *dst = tmp;
+
+		if((bytespp > 2) && (tex->gl.baseformat == GL_RGB || tex->gl.baseformat == GL_RGBA) && (fmt == GL_RGB || fmt == GL_RGBA)) {
+			for(GLuint i = 0; i < w * h; ++i) {
+				dst[0] = src[2];
+				dst[1] = src[1];
+				dst[2] = src[0];
+				dst[3] = 0xFF;
+				dst += tex->bytespp;
+				src += bytespp;
+			}
+		} else {
+			pbgl_debug_log("unimplemented conversion from 0x%04x to 0x%04x", fmt, tex->gl.baseformat);
+		}
+
+		const GLuint dst_pitch = tex->mips[level].pitch;
+		const GLuint row_bytes = w * tex->bytespp;
+		const GLubyte *row = tmp;
+		for(GLuint r = 0; r < h; ++r, row += row_bytes) {
+			pbgl_aligned_copy(out + (y + r) * dst_pitch + x * tex->bytespp, row, row_bytes);
+		}
+
+		free(tmp);
+		return;
+	}
+
 	if(tex->bytespp == bytespp && !reverse) {
 		// no need for conversion
 		if(x || y || w != tex->mips[level].width || h != tex->mips[level].height) {
@@ -510,6 +568,12 @@ static inline void tex_init(texture_t *tex, GLuint dim, GLuint w, GLuint h, GLui
 }
 
 static GLboolean tex_alloc(texture_t *tex) {
+	const GLboolean linear = !(is_pow2(tex->width) && is_pow2(tex->height));
+	// Hardware expects linear layout for NPOT textures; mipmaps are not supported there.
+	if(linear) {
+		tex->mipmap = GL_FALSE;
+	}
+
 	if(tex->mipmap && (tex->width > 1 || tex->height > 1)) {
 		GLuint width = tex->width;
 		GLuint height = tex->height;
@@ -833,11 +897,19 @@ GL_API void glTexImage2D(GLenum target, GLint level, GLint intfmt, GLsizei width
 
 	pbgl.state_dirty = pbgl.tex_any_dirty = pbgl.tex[pbgl.active_tex_sv].dirty = GL_TRUE;
 	pbgl.texenv_dirty = GL_TRUE; // texture type might have changed
+	const GLboolean npot = !is_pow2(width) || !is_pow2(height);
 
-	// lower to the previous power of two, we only support power of two textures
-	// TODO: actually downscale
-	width = uflp2(width);
-	height = uflp2(height);
+	// NPOT textures: only base level, no mipmaps.
+	if(npot) {
+		if(level != 0) {
+			pbgl_set_error(GL_INVALID_VALUE);
+			return;
+		}
+		if(tex->gl.min_filter >= GL_NEAREST_MIPMAP_NEAREST || tex->gl.gen_mipmap || tex->mipmap_expected) {
+			pbgl_set_error(GL_INVALID_OPERATION);
+			return;
+		}
+	}
 
 	if(tex->allocated) {
 		// texture is already allocated, what the fuck does the user want?
@@ -874,10 +946,12 @@ GL_API void glTexImage2D(GLenum target, GLint level, GLint intfmt, GLsizei width
 		// initalize texture (2 dimensions, 1 depth level)
 		tex_init(tex, 2, width << level, height << level, 1, intfmt_bytespp(intfmt));
 		// predict whether mipmaps are gonna be used
-		if(target == GL_TEXTURE_2D) {
+		if(target == GL_TEXTURE_2D && !npot) {
 			tex->mipmap =
 				(tex->gl.min_filter >= GL_NEAREST_MIPMAP_NEAREST) ||
 				tex->gl.gen_mipmap || tex->mipmap_expected;
+		} else {
+			tex->mipmap = GL_FALSE;
 		}
 		tex->mipcount = level + 1;
 		// set GL formats
@@ -1055,6 +1129,14 @@ GL_API void glTexParameteri(GLenum target, GLenum pname, GLint param) {
 		return;
 	}
 
+	const GLboolean npot = !(is_pow2(tex->width) && is_pow2(tex->height));
+	if(npot && pname == GL_TEXTURE_MIN_FILTER &&
+	   (param == GL_NEAREST_MIPMAP_NEAREST || param == GL_LINEAR_MIPMAP_NEAREST ||
+		param == GL_NEAREST_MIPMAP_LINEAR || param == GL_LINEAR_MIPMAP_LINEAR)) {
+		pbgl_set_error(GL_INVALID_OPERATION);
+		return;
+	}
+
 	switch(pname) {
 	case GL_TEXTURE_MIN_FILTER: tex->gl.min_filter = param; break;
 	case GL_TEXTURE_MAG_FILTER: tex->gl.mag_filter = param; break;
@@ -1143,6 +1225,12 @@ GL_API void glGenerateMipmap(GLenum target) {
 		return;
 	}
 
+	// NPOT (linear) textures don't support automatic mipmap generation.
+	if(tex->nv.linear) {
+		pbgl_set_error(GL_INVALID_OPERATION);
+		return;
+	}
+
 	// can't generate mipmaps if there's nothing to generate from
 	if(!tex->allocated || tex->mipcount == 0) {
 		pbgl_set_error(GL_INVALID_OPERATION);
@@ -1197,7 +1285,17 @@ GL_API void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type
 	}
 
 	if(format == tex->gl.baseformat && type == tex->gl.type) {
-		unswizzle_rect(tex->mips[level].data, tex->mips[level].width, tex->mips[level].height, pixels, tex->mips[level].pitch, tex->bytespp);
+		if(tex->nv.linear) {
+			const GLuint pitch = tex->mips[level].pitch;
+			const GLuint row_bytes = tex->mips[level].width * tex->bytespp;
+			GLubyte *dst = pixels;
+			const GLubyte *src = tex->mips[level].data;
+			for(GLuint r = 0; r < tex->mips[level].height; ++r, src += pitch, dst += row_bytes) {
+				pbgl_aligned_copy(dst, src, row_bytes);
+			}
+		} else {
+			unswizzle_rect(tex->mips[level].data, tex->mips[level].width, tex->mips[level].height, pixels, tex->mips[level].pitch, tex->bytespp);
+		}
 	} else {
 		// TODO
 		pbgl_set_error(GL_INVALID_OPERATION);

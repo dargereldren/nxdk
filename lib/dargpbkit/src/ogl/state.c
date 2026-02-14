@@ -400,11 +400,11 @@ GLboolean pbgl_state_flush(void) {
 				// inverse modelview matrix only required for lighting, only calculate it when required
 				// lighting toggle will set the dirty flag if needed
 				// [dargereldren] This seems to actually get ignored..?
-				// if(pbgl.flags.lighting) {
-				// mat4f invmv;
-				// mat4_invert(&invmv, &pbgl.mtx[MTX_MODELVIEW].mtx);
-				// p = push_command_matrix4x4_transposed(p, NV097_SET_INVERSE_MODEL_VIEW_MATRIX, invmv.v);
-				// }
+				//if(pbgl.flags.lighting) {
+					mat4f invmv;
+					mat4_invert(&invmv, &pbgl.mtx[MTX_MODELVIEW].mtx);
+					p = push_command_matrix4x4_transposed(p, NV097_SET_INVERSE_MODEL_VIEW_MATRIX, invmv.v);
+				//}
 				p = push_command_matrix4x4_transposed(p, NV097_SET_MODEL_VIEW_MATRIX, pbgl.mtx[MTX_MODELVIEW].mtx.v);
 			}
 			mat4_mul_sse(&tmp, &tmp, &pbgl.mtx[MTX_MODELVIEW].mtx);

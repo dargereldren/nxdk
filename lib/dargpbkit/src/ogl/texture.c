@@ -81,41 +81,41 @@ static inline GLuint filter_gl_to_nv_mag(const GLenum glfilter) {
 	}
 }
 
-static inline GLuint intfmt_gl_to_nv(const GLenum glformat) {
+static inline GLuint intfmt_gl_to_nv(const GLenum glformat, const GLboolean linear) {
 	switch(glformat) {
 	case GL_ALPHA:
-	case GL_ALPHA8: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8;
+	case GL_ALPHA8: return linear ? NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8 : NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8;
 
 	// FIXME: is this right? what even is Y?
 	//        does GL_INTENSITY also map to Y?
 	case 1: // legacy alias for GL_LUMINANCE
 	case GL_LUMINANCE:
-	case GL_LUMINANCE8: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_Y8;
+	case GL_LUMINANCE8: return linear ? NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_Y8 : NV097_SET_TEXTURE_FORMAT_COLOR_SZ_Y8;
 
 	case 2: // legacy alias for GL_LUMINANCE_ALPHA
 	case GL_LUMINANCE_ALPHA:
-	case GL_LUMINANCE8_ALPHA8: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8Y8;
+	case GL_LUMINANCE8_ALPHA8: return linear ? NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8 : NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8Y8;
 
 	case 3: // legacy alias for GL_RGB
 	case GL_RGB:
 
 	// [Sherbet] we need to remap this
-	case GL_RGB8: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8;
+	case GL_RGB8: return linear ? NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8 : NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8;
 
 	case 4: // legacy alias for GL_RGBA
 	case GL_RGBA:
 
 	// [Sherbet] we need to remap this
-	case GL_RGBA8: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8;
+	case GL_RGBA8: return linear ? NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8 : NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8;
 
-	case GL_RGBA4: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A4R4G4B4;
-	case GL_RGB5_A1: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A1R5G5B5;
-	case GL_RGB5: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_X1R5G5B5;
+	case GL_RGBA4: return linear ? NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A4R4G4B4 : NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A4R4G4B4;
+	case GL_RGB5_A1: return linear ? NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A1R5G5B5 : NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A1R5G5B5;
+	case GL_RGB5: return linear ? NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5 : NV097_SET_TEXTURE_FORMAT_COLOR_SZ_X1R5G5B5;
 
 	case GL_COLOR_INDEX:
 	case GL_COLOR_INDEX8_EXT: return NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8;
 
-	default: return 0;
+	default: return 0xFFFF;
 	}
 }
 
@@ -229,14 +229,11 @@ static inline GLboolean tex_gl_to_nv(texture_t *tex) {
 	// NPOT textures are stored linearly (pitched), not swizzled.
 	tex->nv.linear = !(is_pow2(tex->width) && is_pow2(tex->height));
 
-	const GLuint fmt = intfmt_gl_to_nv(tex->gl.format); //, tex->nv.linear); [dargereldren] not needed (maybe in the future, no idea)
+	const GLuint fmt = intfmt_gl_to_nv(tex->gl.format, tex->nv.linear); // [dargereldren]
 
-	if(fmt == 0) {
+	if(fmt == 0xFFFF) {
 		return GL_FALSE; // unknown format
 	}
-
-    // NPOT textures are stored linearly (pitched), not swizzled.
-	tex->nv.linear = !(is_pow2(tex->width) && is_pow2(tex->height));
 
 	const GLuint addr_u = wrap_gl_to_nv(tex->gl.wrap_s);
 	const GLuint wrap_u = 0; // TODO: what is this?
